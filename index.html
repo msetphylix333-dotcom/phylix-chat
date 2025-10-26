@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phylix Login Chat 💬</title>
+<style>
+  body {font-family: Arial; background: #e5ddd5; margin:0; padding:0;}
+  .container {max-width:400px; margin:30px auto; background:#fff; border-radius:15px;
+    box-shadow:0 0 10px rgba(0,0,0,0.2); overflow:hidden;}
+  .header {background:#075e54; color:#fff; text-align:center; padding:15px; font-size:1.3em;}
+  .chat-box {height:60vh; overflow-y:auto; padding:10px;}
+  .message {padding:8px 12px; margin:8px 0; border-radius:10px; max-width:70%;}
+  .sent {background:#dcf8c6; margin-left:auto;}
+  .received {background:#fff; border:1px solid #ddd;}
+  .chat-input {display:flex; border-top:1px solid #ddd;}
+  .chat-input input {flex:1; padding:10px; border:none; outline:none;}
+  .chat-input button {background:#075e54; color:#fff; border:none; padding:10px 20px; cursor:pointer;}
+  #loginBox {text-align:center; padding:30px;}
+  #loginBox input {padding:10px; width:80%; margin:10px auto; display:block;}
+  #loginBox button {background:#075e54; color:#fff; padding:10px 20px; border:none; cursor:pointer; border-radius:5px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">Phylix 💬</div>
+
+  <div id="loginBox">
+    <h3>Login to Phylix</h3>
+    <input type="text" id="username" placeholder="Enter your name">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="chatArea" style="display:none;">
+    <div class="chat-box" id="chatBox"></div>
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type a message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+// ====== PUT YOUR FIREBASE CONFIG HERE ======
+const firebaseConfig = {apiKey: "AIzaSyD3_tXv36wGEYI6lyhsx01MiV6UUkoso3Y",
+  authDomain: "phylix-chaaat.firebaseapp.com",
+  projectId: "phylix-chaaat",
+  storageBucket: "phylix-chaaat.firebasestorage.app",
+  messagingSenderId: "279759469517",
+  appId: "1:279759469517:web:0121f2b65f91efbe57e284"
+};
+// ===========================================
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let user = null;
+
+function login() {
+  const name = document.getElementById("username").value.trim();
+  if (!name) return alert("Please enter your name!");
+  user = name;
+  localStorage.setItem("phylixUser", name);
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("chatArea").style.display = "block";
+}
+
+function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+  db.ref("messages").push({
+    name: user,
+    msg: msg,
+    time: Date.now()
+  });
+  input.value = "";
+}
+
+db.ref("messages").on("child_added", snap => {
+  const data = snap.val();
+  const div = document.createElement("div");
+  div.classList.add("message");
+  if (data.name === user) div.classList.add("sent");
+  else div.classList.add("received");
+  div.textContent = data.name + ": " + data.msg;
+  document.getElementById("chatBox").appendChild(div);
+  document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
+});
+
+// Auto-login if name stored
+window.onload = () => {
+  const savedUser = localStorage.getItem("phylixUser");
+  if (savedUser) {
+    user = savedUser;
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("chatArea").style.display = "block";
+  }
+};
+</script>
+</body>
+</html>
